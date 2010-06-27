@@ -4,7 +4,7 @@ Donate link: http://paypal.com/send/to/paypal@mikeage.net
 Tags: jewish, hebrew, dates, formatting
 Requires at least: 2.0
 Tested up to: 3.0
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 
 This plugin allows WordPress to easily show Hebrew dates instead of (or in addition to) the standard Gregorian dates. No theme changes are required.
 
@@ -20,6 +20,10 @@ Unzip the zip file, copy to /path/to/wordpress/wp-content/plugins/, activate, an
 
 By default, the following APIs are intercepted:
 the_time()
+the_date()
+get_the_time()
+get_the_date()
+get_comment_time()
 get_comment_date()
 
 == Frequently Asked Questions ==
@@ -31,10 +35,13 @@ Because.
 == Screenshots ==
 
 1. A sample of a post showing dates replaced.
-
 2. The config screen.
 
 == Changelog ==
+
+= 1.0.4 =
+
+* Support for both `the_date()` and `get_the_date()` (required for WordPress 3.0's 2010 theme)
 
 = 1.0.3 =
 
