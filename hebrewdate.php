@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Hebrew Date
-Plugin URI: http://mikeage.net/2006/10/22/wordpress-and-hebrew-dates/
+Plugin URI: http://mikeage.net/content/software/hebrew-dates-in-wordpress/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 1.0.2
+Version: 1.0.3
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
 */
@@ -62,7 +62,7 @@ define('SHOW_HEBREW',0);
 define('SHOW_HEBREW_THEN_GREGORIAN',1);
 define('SHOW_GREGORIAN_THEN_HEBREW',2);
 
-function jewishDate($content, $isTimeStampForHebrew = false) {
+function jewishDate($content, $isTimeStampForHebrew = false, $hour="",$min="") {
 	$spelling = get_option('hebrewdate_spelling');
 	$sunset_correction = get_option('hebrewdate_correct_sunset') ? true : false;
 	//FIXME use a better way to detect time.
@@ -96,7 +96,9 @@ function jewishDate($content, $isTimeStampForHebrew = false) {
 		} else {
 			if ($sunset_correction) {
 				/* We need the time ($content probably contains just the date */
-				if (get_comment_time('z')) {
+				if (($hour != "") && ($min != "")) {
+					;
+				} else if (get_comment_time('z')) {
 					$hour = get_comment_time('G');
 					$min = get_comment_time('i');
 				} else {
@@ -538,12 +540,45 @@ assume that nighttime is still the previous Hebrew day)</label></p>
   <input type="submit" name="update" value="Update" />
   </div>
   </form>
+  <h2>Help</h2>
+<h3>hebrewDateCurrent API</h3>
+<p>
+HebrewDate provides an API, 
+<code>hebrewDateCurrent($dateFormat,$location)</code> that can be used to 
+display the current Hebrew Date in your favorite theme. If called with no 
+parameters (or an illegal combination of parameters), it displays the 
+current Hebrew Date according to the Character Set configuration above. By 
+setting <code>$dateFormat</code> to a <a href="http://php.net/date">valid 
+PHP date format</a>, and <code>$location</code> to either 
+<code>"before"</code> or <code>"after"</code> (including the quotation 
+marks), it will display the secular day as well 
+(<code>$location</code> controls the placement of the <strong>Hebrew 
+Date</strong>).</p> 
+<p>Alternatively, <code>$dateFormat</code> can be set to the special 
+value of <code>"date_format"</code>, in which case it will use the default wordpress 
+formatting.</p>
+<p>Finally, <code>$dateFormat</code> can be set to the special value of 
+<code>"default"</code>. In this case, the <code>$location</code> 
+parameter is ignored, and the function produces the same value that 
+<code>the_time()</code> produces within The Loop.</p>
+
  </div><?php
 }
 
-function hebrewDateCurrent() {
+function hebrewDateCurrent($dateFormat="",$where=false) {
 	$display = date('U') - date('Z') + 60*60*get_option('gmt_offset'); /* Contains the HMS for local time */
-	echo jewishDate($display,true);
+	if ($dateFormat == "date_format") 
+		$dateFormat=get_option("date_format");
+	if ($dateFormat == "default") {
+		echo jewishDate(date("F j, Y",$display),false,date("G",$display),date("i",$display));	
+	}
+	else if ($where == "before" && $dateFormat != "")
+		echo jewishDate($display,true) . "-" . date($dateFormat);
+	else if ($where =="after" && $dateFormat != "")
+		echo date($dateFormat) . "-" . jewishDate($display,true);
+	else 
+		echo jewishDate($display,true);
+
 }
 
 
