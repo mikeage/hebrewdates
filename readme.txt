@@ -4,7 +4,7 @@ Donate link: http://paypal.com/send/to/paypal@mikeage.net
 Tags: jewish, hebrew, dates, formatting
 Requires at least: 2.0
 Tested up to: 3.0
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 
 This plugin allows WordPress to easily show Hebrew dates instead of (or in addition to) the standard Gregorian dates. No theme changes are required.
 
@@ -13,6 +13,8 @@ This plugin allows WordPress to easily show Hebrew dates instead of (or in addit
 This plugin allows WordPress to easily show Hebrew dates instead of (or in addition to) the standard Gregorian dates. No theme changes are required.
 
 This plugin is based on the Hebrew Date plugin from KosherJava. All bugs are mine, though.
+
+This plugin is slightly similar to http://wordpress.org/extend/plugins/wordpress-hebrew-date/, but much more robust. It's also older, although not on wordpress.org
 
 == Installation ==
 
@@ -38,6 +40,11 @@ Because.
 2. The config screen.
 
 == Changelog ==
+
+= 2.0.1 = 
+
+* Fixed a bug for English (both Ashkenazim and Sefardic) transliterations not appearing (introduced in 2.0.0)
+* Added the option to remove the quotes from the Hebrew dates (requested by http://www.amotherinisrael.com/)
 
 = 2.0.0 =
 

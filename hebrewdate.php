@@ -3,7 +3,7 @@
 Plugin Name: Hebrew Date
 Plugin URI: http://mikeage.net/content/software/hebrew-dates-in-wordpress/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 2.0.0
+Version: 2.0.1
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
  */
@@ -68,9 +68,7 @@ function AddHebrewDateWrap_get_comment_date($content, $format) { return AddHebre
 /* Main Function. This function receives the string to be converted, the format string that generated the date (if available), and the source of the request. It returns a new string suitable for use in place, based on the configuration set in the Admin panel */ 
 function AddHebrewDateToGregorian($content, $format = "", $originalRequest = null) {
 
-	debug_print("^Input content was |$content|, formatted as |$format|, from |$originalRequest|...");
-
-	$spelling = get_option('hebrewdate_spelling');
+	debug_print("Input content was |$content|, formatted as |$format|, from |$originalRequest|...");
 
 	/* Once replaced, a date has <!-- HD --> prepended to it. This allows us to prevent an infinite loop since internally, we call functions to which we've been added as a filter */
 	$doneAlready = strpos($content, "<!-- HD -->");
@@ -102,6 +100,8 @@ function GetHebrewDateString($content, $format="", $originalRequest=null) {
 
 	/* Sometimes there's an extra <br /> in dates. I don't remember why. */
 	$content = str_replace("<br />", "", $content);
+
+	$spelling = get_option('hebrewdate_spelling');
 	$sunset_correction = get_option('hebrewdate_correct_sunset') ? true : false;
 
 	debug_print("Converting |$content| as |$format| (from |$originalRequest|)...");
@@ -309,6 +309,7 @@ function GetHebrewDateStringFromHebrewDate($spelling, $year, $month="", $day="",
 
 	/* Are we going to be returning Latin letters or Hebrew ones? */
 	$charset = get_option('hebrewdate_latin_display') ? LATIN_CHARSET : HEBREW_CHARSET;
+	$useQuotes = get_option('hebrewdate_use_quotes') ? true: false;
 
 	/* Defensive code */
 	if ($spelling == SEFARDIC_SPELLING || $spelling == ASHKENAZIC_SPELLING) {
@@ -318,7 +319,7 @@ function GetHebrewDateStringFromHebrewDate($spelling, $year, $month="", $day="",
 	/* Prepare the fields for the Hebrew date string */
 	if ($day) {
 		if ($charset == HEBREW_CHARSET) {
-			$hebrewDayString = getHebrewDayString($day);
+			$hebrewDayString = getHebrewDayString($day, $useQuotes);
 		} else {
 			$hebrewDayString = $day;
 		}
@@ -330,14 +331,14 @@ function GetHebrewDateStringFromHebrewDate($spelling, $year, $month="", $day="",
 	}
 
 	if ($charset == HEBREW_CHARSET) {
-		$hebrewYearString = getHebrewYearString($year);
+		$hebrewYearString = getHebrewYearString($year, $useQuotes);
 	} else {
 		$hebrewYearString = $year;
 	}
 
 	if (!empty($endYear) && $endYear != $year) {
 		if ($charset == HEBREW_CHARSET) {
-			$endHebrewYearString = getHebrewYearString($endYear);
+			$endHebrewYearString = getHebrewYearString($endYear, $useQuotes);
 		} else {
 			$endHebrewYearString = $endYear;
 		}
@@ -488,29 +489,42 @@ function isHebrewLeapYear($year) {
 	}
 }
 /* Return the hebrew letters string for a day (0-30) */
-function getHebrewDayString($day) {
+function getHebrewDayString($day, $useQuotes) {
 	$jTens = array("", "&#1497;", "&#1499;", "&#1500;", "&#1502;",
 		"&#1504;", "&#1505;", "&#1506;", "&#1508;", "&#1510;");
 	$jTenEnds = array("", "&#1497;", "&#1498;", "&#1500;", "&#1501;",
 		"&#1503;", "&#1505;", "&#1506;", "&#1507;", "&#1509;");
-	$tavTaz = array("&#1496;&quot;&#1493;", "&#1496;&quot;&#1494;");
 	$jOnes = array("", "&#1488;", "&#1489;", "&#1490;", "&#1491;",
 		"&#1492;", "&#1493;", "&#1494;", "&#1495;", "&#1496;");
 
 	if($day < 10) { //single digit days get single quote appended
 		$sb .= $jOnes[$day];
-		$sb .= "'";
+		if ($useQuotes) {
+			$sb .= "'";
+		}
 	} else if($day == 15) { //special case 15
-		$sb .= $tavTaz[0];
+		$sb .= $jOnes[9];
+		if ($useQuotes) {
+			$sb .= "&quot;";
+		}
+		$sb .= $jOnes[6];
 	} else if($day == 16) { //special case 16
-		$sb .= $tavTaz[1];
+		$sb .= $jOnes[9];
+		if ($useQuotes) {
+			$sb .= "&quot;";
+		}
+		$sb .= $jOnes[7];
 	} else {
 		$tens = $day / 10;
 		$sb .= $jTens[$tens];
 		if($day % 10 == 0) { // 10 or 20 single digit append single quote
-			$sb .= "'";
+			if ($useQuotes) {
+				$sb .= "'";
+			}
 		} else if($day > 10) { // >10 display " between 10s and 1s
-			$sb .= "&quot;";
+			if ($useQuotes) {
+				$sb .= "&quot;";
+			}
 		}
 		$day = $day % 10; //discard 10s
 		$sb .= $jOnes[$day];
@@ -545,13 +559,12 @@ function getHebrewMonthString($spelling, $month, $year) {
 
 }
 
-function getHebrewYearString($year) {
+function getHebrewYearString($year, $useQuotes) {
 	$display_thousands = get_option('hebrewdate_display_thousands');
 	$jAlafim = "&#1488;&#1500;&#1508;&#1497;&#1501;"; //word ALAFIM in Hebrew for display on years evenly divisable by 1000
 	$jHundreds = array("", "&#1511;","&#1512;","&#1513;","&#1514;",	"&#1514;&#1511;","&#1514;&#1512;","&#1514;&#1513;", "&#1514;&#1514;", "&#1514;&#1514;&#1511;");
 	$jTens = array("", "&#1497;", "&#1499;", "&#1500;", "&#1502;", "&#1504;", "&#1505;", "&#1506;", "&#1508;", "&#1510;");
 	$jTenEnds = array("", "&#1497;", "&#1498;", "&#1500;", "&#1501;", "&#1503;", "&#1505;", "&#1506;", "&#1507;", "&#1509;");
-	$tavTaz = array("&#1496;&quot;&#1493;", "&#1496;&quot;&#1494;");
 	$jOnes = array("", "&#1488;", "&#1489;", "&#1490;", "&#1491;", "&#1492;", "&#1493;", "&#1494;", "&#1495;", "&#1496;");
 
 	$singleDigitYear = isSingleDigitHebrewYear($year);
@@ -562,12 +575,16 @@ function getHebrewYearString($year) {
 	//append thousands to String
 	if($year % 1000 == 0) { // in year is 5000, 4000 etc
 		$sb .= $jOnes[$thousands];
-		$sb .= "'";
+			if ($useQuotes) {
+				$sb .= "'";
+			}
 		$sb .= "&#160;";
 		$sb .= $jAlafim; //add # of thousands plus word thousand (overide alafim boolean)
 	} else if($display_thousands) { // if alafim boolean display thousands
 		$sb .= $jOnes[$thousands];
-		$sb .= "'"; //append thousands quote
+			if ($useQuotes) {
+				$sb .= "'";
+			}
 		$sb .= "&#160;";
 	}
 	$year = $year % 1000;//remove 1000s
@@ -575,9 +592,17 @@ function getHebrewYearString($year) {
 	$sb .= $jHundreds[$hundreds]; //add hundreds to String
 	$year = $year % 100; //remove 100s
 	if($year == 15) { //special case 15
-		$sb .= $tavTaz[0];
+		$sb .= $jOnes[9];
+		if ($useQuotes) {
+			$sb .= "&quot;";
+		}
+		$sb .= $jOnes[6];
 	} else if($year == 16) { //special case 16
-		$sb .= $tavTaz[1];
+		$sb .= $jOnes[9];
+		if ($useQuotes) {
+			$sb .= "&quot;";
+		}
+		$sb .= $jOnes[7];
 	} else {
 		$tens = $year / 10;
 		if($year % 10 == 0) { // if evenly divisable by 10
@@ -593,10 +618,15 @@ function getHebrewYearString($year) {
 		}
 	}
 	if($singleDigitYear == true) {
-		$sb .= "'"; //append single quote
+			if ($useQuotes) {
+				$sb .= "'";
+			}
 	} else { // append double quote before last digit
 		$pos1 = strrpos($sb, "&");
-		$sb = substr($sb, 0, $pos1) . "&quot;" . substr($sb, $pos1);
+			if ($useQuotes) {
+				$sb .= "'";
+					$sb = substr($sb, 0, $pos1) . "&quot;" . substr($sb, $pos1);
+			}
 	}
 
 	return $sb;
@@ -626,6 +656,7 @@ function hebrewdate_subpanel() {
 	$updated = false;
 	if (isset($_POST['update'])) {
 		$latin_display = $_POST['latin_display'];
+		$use_quotes = $_POST['use_quotes'];
 		$spelling = $_POST['spelling'];
 		$display_thousands = $_POST['display_thousands'];
 		$display_full = $_POST['display_full'];
@@ -634,6 +665,7 @@ function hebrewdate_subpanel() {
 		$latitude = $_POST['latitude'];
 		$longitude = $_POST['longitude'];
 		update_option('hebrewdate_latin_display', $latin_display);
+		update_option('hebrewdate_use_quotes', $use_quotes);
 		update_option('hebrewdate_spelling', $spelling);
 		update_option('hebrewdate_display_thousands', $display_thousands);
 		update_option('hebrewdate_display_full', $display_full);
@@ -647,6 +679,7 @@ function hebrewdate_subpanel() {
 	</p></div><?php
 	}
 	$latin_display = get_option('hebrewdate_latin_display');
+	$use_quotes = get_option('hebrewdate_use_quotes');
 	$spelling = get_option('hebrewdate_spelling');
 	$display_thousands = get_option('hebrewdate_display_thousands');
 	$display_full = get_option('hebrewdate_display_full');
@@ -704,6 +737,9 @@ function hebrewdate_subpanel() {
 	<input type="checkbox" <?php if ($latin_display) echo "checked=\"checked\"" ?>
 	name="latin_display" id="latin_display" />
 	<label for="latin_display">Display dates as Arabic numbers instead of Hebrew letters (Hebrew months display only)</label><br />
+	<input type="checkbox" <?php if ($use_quotes) echo "checked=\"checked\"" ?>
+	name="use_quotes" id="use_quotes" />
+	<label for="use_quotes">Insert quotes in Hebrew dates</label><br />
 	<input type="checkbox" <?php if ($display_thousands) echo "checked=\"checked\"" ?> 
 	name="display_thousands" id="display_thousands" />
 	<label for="display_thousands">Display Thousands in the Hebrew Year (Hebrew numbered dates only)</label>
