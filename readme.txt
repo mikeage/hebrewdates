@@ -1,6 +1,6 @@
 === Plugin Name ===
 Contributors: mikeage, KosherJava
-Donate link: http://paypal.com/sent/to/paypal@mikeage.net
+Donate link: http://paypal.com/send/to/paypal@mikeage.net
 Tags: jewish, hebrew, dates, formatting
 Requires at least: 2.0
 Tested up to: 3.0
@@ -35,6 +35,10 @@ Because.
 2. The config screen.
 
 == Changelog ==
+
+= 1.0.2 =
+
+* Code no longer breaks things! [fix for the_time()]
 
 = 1.0.1 =
 

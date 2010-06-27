@@ -3,7 +3,7 @@
 Plugin Name: Hebrew Date
 Plugin URI: http://mikeage.net/2006/10/22/wordpress-and-hebrew-dates/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 1.0.1
+Version: 1.0.2
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
 */
@@ -72,7 +72,7 @@ function jewishDate($content, $isTimeStampForHebrew = false) {
 	$month="";
 	$year="";
 	$isArchiveFormat = false;
-	if ($colPos != false && $comPos == false && isTimeStampForHebrew == $false) {// contains a colon and no comma, assuming a time not date.
+	if (($colPos != false) && ($comPos == false) && ($isTimeStampForHebrew == false)) {// contains a colon and no comma, assuming a time not date.
 	   return $content;
 	}
 	if ($isTimeStampForHebrew == false) {
