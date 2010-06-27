@@ -3,10 +3,10 @@
 Plugin Name: Hebrew Date
 Plugin URI: http://mikeage.net/content/software/hebrew-dates-in-wordpress/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 1.0.4
+Version: 2.0.0
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
-*/
+ */
 
 /*
 This program is free software; you can redistribute it and/or modify it under the terms of the
@@ -20,35 +20,29 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program; if
 not, write to the Free Software Foundation, Inc. 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA or connect to: http://www.fsf.org/copyleft/gpl.html
-*/
+ */
 
 /* Arrays for month names */
 // These are accessed as $GLOBALS['name']
-$ashkenazMonths = array("Tishrei", "Cheshvan", "Kislev", "Teves", "Shevat", "Adar I",
-			"Adar II", "Nisan", "Iyar", "Sivan", "Tamuz", "Av", "Elul",
-			"Adar", "Marcheshvan", "Menachem Av");
-$sefardMonths = array(	"Tishre", "Heshwan", "Kislev", "Tevet", "Shevat", "Adar I",
-			"Adar II", "Nisan", "Iyar", "Sivan", "Tamuz", "Av", "Elul",
-			"Adar", "Marheshwan", "Menahem Av");
+$ashkenazMonths = array("Tishrei", "Cheshvan", "Kislev", "Teves", "Shevat", "Adar I", "Adar II", "Nisan", "Iyar", "Sivan", "Tamuz", "Av", "Elul", "Adar", "Marcheshvan", "Menachem Av");
+$sefardMonths = array(	"Tishre", "Heshwan", "Kislev", "Tevet", "Shevat", "Adar I", "Adar II", "Nisan", "Iyar", "Sivan", "Tamuz", "Av", "Elul", "Adar", "Marheshwan", "Menahem Av");
 $hebrewMonths = array(	"&#1514;&#1513;&#1512;&#1497;",   /* Tishrei */
-			"&#1495;&#1513;&#1493;&#1503;",   /* Cheshvan */
-			"&#1499;&#1505;&#1500;&#1493;",   /* Kislev */
-			"&#1496;&#1489;&#1514;",	  /* Teves */
-			"&#1513;&#1489;&#1496;",	  /* Sh'vat */
-			"&#1488;&#1491;&#1512; &#1488;'", /* Adar A */
-			"&#1488;&#1491;&#1512; &#1489;'", /* Adar B */
-			"&#1504;&#1497;&#1505;&#1503;",   /* Nissan */
-			"&#1488;&#1497;&#1497;&#1512;",	  /* Iyar */
-			"&#1505;&#1497;&#1493;&#1503;",	  /* Sivan */
-			"&#1514;&#1502;&#1493;&#1494;",	  /* Tamuz */
-			"&#1488;&#1489;",		  /* Av */
-			"&#1488;&#1500;&#1493;&#1500;",	  /* Elul */
-			"&#1488;&#1491;&#1512;",	  /* Adar (regular) */
-			"&#1502;&#1512;&#1495;&#1513;&#1493;&#1503;", /* Mar Cheshvan */
-			"&#1502;&#1504;&#1495;&#1501; &#1488;&#1489;", /* Menachem Av */
-			); 
-
-
+"&#1495;&#1513;&#1493;&#1503;",   /* Cheshvan */
+"&#1499;&#1505;&#1500;&#1493;",   /* Kislev */
+"&#1496;&#1489;&#1514;",	  /* Teves */
+"&#1513;&#1489;&#1496;",	  /* Sh'vat */
+"&#1488;&#1491;&#1512; &#1488;'", /* Adar A */
+"&#1488;&#1491;&#1512; &#1489;'", /* Adar B */
+"&#1504;&#1497;&#1505;&#1503;",   /* Nissan */
+"&#1488;&#1497;&#1497;&#1512;",	  /* Iyar */
+"&#1505;&#1497;&#1493;&#1503;",	  /* Sivan */
+"&#1514;&#1502;&#1493;&#1494;",	  /* Tamuz */
+"&#1488;&#1489;",		  /* Av */
+"&#1488;&#1500;&#1493;&#1500;",	  /* Elul */
+"&#1488;&#1491;&#1512;",	  /* Adar (regular) */
+"&#1502;&#1512;&#1495;&#1513;&#1493;&#1503;", /* Mar Cheshvan */
+"&#1502;&#1504;&#1495;&#1501; &#1488;&#1489;", /* Menachem Av */
+); 
 
 /* Defines. Note that these are constants, not configuration options */
 define('LATIN_CHARSET', 0);
@@ -62,209 +56,443 @@ define('SHOW_HEBREW',0);
 define('SHOW_HEBREW_THEN_GREGORIAN',1);
 define('SHOW_GREGORIAN_THEN_HEBREW',2);
 
-function jewishDateCalculate($content, $hour="", $min="", $day="") {
-	$isArchiveFormat = false;
-	$pdate = -1;
-	return jewishDateCalculateCheckFormat($content,$hour,$min,$day,$isArchiveFormat,$pdate);
-}
+/* Wrapper functions; these all call the the same function, but pass the source of the request. We need this to know how to query for the time (for sunset correction) if we're only given a date */
+function AddHebrewDateWrap_the_time($content, $format){ return AddHebrewDateToGregorian($content, $format, "the_time");  }
+function AddHebrewDateWrap_the_date($content, $format){ return AddHebrewDateToGregorian($content, $format, "the_date"); }
+function AddHebrewDateWrap_get_the_time($content, $format){ return AddHebrewDateToGregorian($content, $format, "get_the_time"); }
+function AddHebrewDateWrap_get_the_date($content, $format){ return AddHebrewDateToGregorian($content, $format, "get_the_date"); }
+function AddHebrewDateWrap_get_comment_time($content, $format) { return AddHebrewDateToGregorian($content, $format, "get_comment_time"); }
+function AddHebrewDateWrap_get_comment_date($content, $format) { return AddHebrewDateToGregorian($content, $format, "get_comment_date"); }
 
-function jewishDateCalculateCheckFormat($content, $hour="", $min="", $day="", &$isArchiveFormat, &$pdate) {
-	$sunset_correction = get_option('hebrewdate_correct_sunset') ? true : false;
-	$colPos = strrpos($content, ":");
-	$comPos = strrpos($content, ",");
-	$slashPos = strrpos($content, "/");
 
-	$content = str_replace("<br />", "", $content);
-	$date_format = get_settings('date_format');
+/* Main Function. This function receives the string to be converted, the format string that generated the date (if available), and the source of the request. It returns a new string suitable for use in place, based on the configuration set in the Admin panel */ 
+function AddHebrewDateToGregorian($content, $format = "", $originalRequest = null) {
 
-	$pdate = strtotime($content); //WP-Admin adds a break tag for display purposes which we have to strip out.
-//	printf("PDATE is |$pdate| for |$content|");
-	if (($content > strtotime("Jan 1, 1990")) && ($content < strtotime("Dec 31, 2020")))
-		$pdate = $content;
-	if ($pdate == -1){ // non valid parsable date such as Month, Year (archives)
-		$dateParts = explode(" ", trim(str_replace(",","",$content))); //try to extract Month, Year format
-		$month=$dateParts[0];
+	debug_print("^Input content was |$content|, formatted as |$format|, from |$originalRequest|...");
 
-		$months = array("january"=>"1", "february"=>"2", "march"=>"3", "april"=>"4", "may"=>"5", "june"=>"6", "july"=>"7", "august"=>"8", "september"=>"9", "october"=>"10", "november"=>"11", "december"=>"12");
-		if (isset($months[strtolower($month)])) { //found archive month in array
-			$month = $months[strtolower($month)];
-		} else { //FIXME might be caused by localized non english month
-			//printf("returning early");
-			$isArchiveFormat = true;
-			return $content;
-		}
-	
-		if (empty($year))
-			$year=$dateParts[1];
-		if(! is_numeric($year)){ // funny date format for archive
-			return $content;
-		}
-		$isArchiveFormat = true;
-	} else 	if (($content > 1990) && ($content < 2020)) { // Special case for a year
-		//printf("returning early");
-		$isArchiveFormat = true;
-		return $content;
-	} else { 
-		if ($sunset_correction) {
-			if ($hour != "" && $min != "" && $day!= "") {
-				; // We have our H:M
-			} else if ($comPos == false && $slashPos == false) {
-				// Probably a timestamp
-				$hour = date('H',$content);
-				$min =  date('i',$content);
-				$day = date('z', $content);
-			} else if (get_comment_time('z')) {
-				// If it's a comment, we don't want the post time
-				$hour = get_comment_time('H');
-				$min = get_comment_time('i');
-				$day = get_comment_time('z');
-			} else {
-				// Get the time from the post
-				$hour = get_post_time('H');
-				$min = get_post_time('i');
-				$day = get_post_time('z');
-//				print "GTT returned " . get_the_time('H'). " and " . get_the_time('G');
-			}
-			$time_elapsed = 60*$hour + $min;
-			$latitude = get_option('hebrewdate_latitude');
-			$longitude = get_option('hebrewdate_longitude');
-			$sunset = calcSunset($latitude, $longitude, 90.5, 
-				$day, get_option('gmt_offset'));
-			if ($time_elapsed > $sunset) {
-				$adj_pdate = $pdate + 24*60*60;
-			} else {
-			    $adj_pdate = $pdate;
-			}
-		} else {
-			$adj_pdate = $pdate;
-		}
-		$month = date('m',$adj_pdate);
-		$day = date('j',$adj_pdate);
-		$year = date('Y',$adj_pdate);
-	}
-	$altDay=30;
-	if (empty($day)) {
-		$day = 1;
-		if (!empty($month)){
-			if (function_exists("cal_days_in_month")) $altDay = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-			else $altDay = 30;
-		}
-	}
-
-	$jd = gregoriantojd($month, $day, $year);
-	$hebrewDate = jdtojewish($jd);
-	list ($hebrewMonth, $hebrewDay, $hebrewYear) = split ('/', $hebrewDate);
-
-	$altJd = gregoriantojd($month, $altDay, $year);
-	$altHebrewDate = jdtojewish($altJd);
-	list ($altHebrewMonth, $altHebrewDay, $altHebrewYear) = split ('/', $altHebrewDate);
-
-	if ($isArchiveFormat) $hebrewDay = "";
-
-	$convertedDate = getHebrewDate($spelling, $hebrewYear, $hebrewMonth, 
-		$hebrewDay, $altHebrewYear, $altHebrewMonth);
-
-	return $convertedDate;
-}
-
-//function jewishDate($content, $hour="",$min="", $day="") {
-function jewishDate($content) {
 	$spelling = get_option('hebrewdate_spelling');
-	//FIXME use a better way to detect time.
-	$colPos = strrpos($content, ":");
-	$comPos = strrpos($content, ",");
-	$slashPos = strrpos($content, "/");
-	$day="";
-	$month="";
-	$year="";
-	$isArchiveFormat = false;
-   // printf("|now working on -|$content|-  ");
-	if (($colPos != false) && ($comPos == false)) {// contains a colon and no comma, assuming a time not date.
-	   return $content;
+
+	/* Once replaced, a date has <!-- HD --> prepended to it. This allows us to prevent an infinite loop since internally, we call functions to which we've been added as a filter */
+	$doneAlready = strpos($content, "<!-- HD -->");
+	if(false !== $doneAlready) { return $content;}
+
+	/* Get the converted string */
+	$convertedDate = GetHebrewDateString($content, $format, $originalRequest);
+
+	if (null === $convertedDate) {
+		return $content;
 	}
-	$doneAlready = strrpos($content, "<!-- HD -->");
-	if(false !== $doneAlready) { return $content;} // Already processed
-//	if(false !== $doneAlready) { printf("|$content$| was done already at $doneAlready!"); ; return $content;} // Already processed
 
-	$convertedDate = jewishDateCalculateCheckFormat($content,$hour,$min,$day,$isArchiveFormat,$pdate);
+	debug_print("Got back $convertedDate...");
 
-	$time_format = get_settings('time_format');
-	$date_format = get_settings('date_format');
-
-	if($isArchiveFormat){
-		$gregorianDate = $content;
-	} else {
-		$gregorianDate = date($date_format, $pdate);
-	}
 	$date_order = get_option('hebrewdate_date_order');
 	if ($date_order == SHOW_HEBREW) {
 		$outputDate = $convertedDate;
 	} else if ($date_order == SHOW_HEBREW_THEN_GREGORIAN) {
-		$outputDate = $convertedDate . ' - ' . $gregorianDate;
+		$outputDate = $convertedDate . ' - ' . $content;
 	} else if ($date_order == SHOW_GREGORIAN_THEN_HEBREW) {
-		$outputDate = $gregorianDate . ' - ' . $convertedDate;
+		$outputDate = $content . ' - ' . $convertedDate;
 	}
 
 	return "<!-- HD -->" . $outputDate; 
 }
-function getHebrewDate($spelling, $year, $month="", $day="", $altYear="", $altMonth="") {
-	$charset = get_option('hebrewdate_latin_display') ? LATIN_CHARSET : HEBREW_CHARSET;
-	if ($spelling == SEFARDIC_SPELLING || $spelling == ASHKENAZIC_SPELLING) {
 
+/* This function actually handles the conversion. We have a sepereate function to support the public APIs, which don't need the "already-done" check and don't want to keep the Gregorian date */
+function GetHebrewDateString($content, $format="", $originalRequest=null) {
+
+	/* Sometimes there's an extra <br /> in dates. I don't remember why. */
+	$content = str_replace("<br />", "", $content);
+	$sunset_correction = get_option('hebrewdate_correct_sunset') ? true : false;
+
+	debug_print("Converting |$content| as |$format| (from |$originalRequest|)...");
+	if (empty($format)) {
+		debug_print("No format string...");
+		if (!isset($originalRequest)) {
+			/* If we don't have a format string, and don't know where the request came from, ignore this */
+			debug_print("And no source...");
+			debug_print("Giving up.");
+			return null;
+		}
+		switch ($originalRequest) {
+		case the_time:
+		case get_the_time:
+		case get_comment_time:
+			$format = get_settings('time_format');
+			debug_print("Assuming time_format (|$format|)...");
+			break;
+		case the_date:
+		case get_the_date:
+		case get_comment_date:
+			$format = get_settings('date_format');
+			debug_print("Assuming date_format... (|$format|)...");
+			break;
+		default:
+			/* Huh? */
+			debug_print("Unknown source...");
+			debug_print("Giving up.");
+			return null;
+		}
+	}
+
+	/* Now try and figure out what format $content is based on $format. This is very ugly looking, but it's the best I could come up with. strtotime is simply not reliable enough (even for full times, and certainly not for handling archives) */
+	if (function_exists('date_parse_from_format')) {
+		$new_parse = true;
+		$content_parsed = date_parse_from_format($format, $content);
+	} else {
+		$new_parse = false;
+		$content_parsed = strptime($content, dateFormatToStrftime($format));
+		$content_parsed['hour']=$content_parsed['tm_hour'];
+		$content_parsed['minute']=$content_parsed['tm_min'];
+		$content_parsed['day']=$content_parsed['tm_mday'];
+		$content_parsed['month']=$content_parsed['tm_mon'] + 1;
+		$content_parsed['year']=$content_parsed['tm_year'] + 1900;
+	}
+	$F = (false !== strpos($format, 'F')); 
+	$m = (false !== strpos($format, 'm'));
+	$M = (false !== strpos($format, 'M'));
+	$n = (false !== strpos($format, 'n')) && $new_parse;
+	$d = (false !== strpos($format, 'd'));
+	$j = (false !== strpos($format, 'j'));
+	$D = (false !== strpos($format, 'D'));
+	$l = (false !== strpos($format, 'l'));
+	$N = (false !== strpos($format, 'N'));
+	$w = (false !== strpos($format, 'w'));
+	$W = (false !== strpos($format, 'W'));
+	$o = (false !== strpos($format, 'o'));
+	$y = (false !== strpos($format, 'y'));
+	$Y = (false !== strpos($format, 'Y'));
+	$g = (false !== strpos($format, 'g'));
+	$G = (false !== strpos($format, 'G')) && $new_parse;
+	$h = (false !== strpos($format, 'h'));
+	$H = (false !== strpos($format, 'H'));
+	$i = (false !== strpos($format, 'i'));
+	$U = (false !== strpos($format, 'U'));
+	if (($F || $m || $M || $n) && ($d || $j || (($D || $l || $n || $w) && $W)) && ($o || $y || $Y))  {
+		/* Full Date: date and (month OR (day AND week) AND year */
+		debug_print("Full date...");
+		$archiveFormat = "";
+		$day = $content_parsed['day'];
+		$month = $content_parsed['month'];
+		$year = $content_parsed['year'];
+		if (!(($g || $G || $h || $H) && $i)) {
+			/* Time is not present; we'll try to extract it from the original source */
+			debug_print("But no time...");
+			switch ($originalRequest) {
+			case get_comment_time:
+			case get_comment_date:
+				debug_print("Assuming a comment...");
+				$content_parsed['hour']= get_comment_time('H');
+				$content_parsed['minute'] = get_comment_time('i');
+				break;
+			case the_time:
+			case get_the_time:
+			case the_date:
+			case get_the_date:
+				debug_print("Checking: post or comment? ");
+				if (get_comment_time('z')) {
+					debug_print("Comment! ...");
+					$content_parsed['hour']= get_comment_time('H');
+					$content_parsed['minute'] = get_comment_time('i');
+				} else {
+					debug_print("Post! ...");
+					$content_parsed['hour']= get_post_time('H');
+					$content_parsed['minute'] = get_post_time('i');
+				}
+				break;
+			default:
+				debug_print("Unknown request: don't know how to get H:m...");
+				debug_print("Assuming noontime...");
+				$content_parsed['hour']=12;
+				$content_parsed['minute']=0;
+				break;
+			}
+		}
+		$hour = $content_parsed['hour'];
+		$min = $content_parsed['minute'];
+	} else if ($U) {
+		/* Why can't date_parse_from_format handle this?! For some reason, it always returns 0 for me... */
+		debug_print("Got a unix epoch");
+		$month = $content_parsed['month'] = date('m', $content);
+		$year = $content_parsed['year'] = date('Y', $content);
+		$day = $content_parsed['day'] = date('j', $content);
+		$hour = $content_parsed['hour'] = date('H', $content);
+		$min = $content_parsed['minute'] = date('i', $content);
+		$archiveFormat = "";
+	} else if (($F || $m || $M || $n) && ($o || $y || $Y))  {
+		debug_print("Got a month and year ...");
+		$day = 1;
+		$month = $content_parsed['month'];
+		$year = $content_parsed['year'];
+		$archiveFormat = "month";
+	} else if ($o || $y || $Y)  {
+		debug_print("Got a year...");
+		$day = 1;
+		$month = 1;
+		$year = $content_parsed['year'];
+		$archiveFormat = "year";
+	} else {
+		debug_print("Can't handle this date format!");
+		debug_print("Returning |$content|...");
+		return null;
+	}
+	debug_print("It appears we're at $hour:$min:0 at $year-$month-$day...");
+	$pdate = mktime($hour, $min, 0, $month, $day, $year);
+
+	debug_print("Working with pdate=|$pdate|...");
+
+	if ($sunset_correction && $archiveFormat == "") {
+		$time_elapsed = 60*$hour + $min;
+		$latitude = get_option('hebrewdate_latitude');
+		$longitude = get_option('hebrewdate_longitude');
+		$sunset = calcSunset($latitude, $longitude, 90.5, 
+			$day, get_option('gmt_offset'));
+		if ($time_elapsed > $sunset) {
+			$adj_pdate = $pdate + 24*60*60;
+		} else {
+			$adj_pdate = $pdate;
+		}
+	} else { 
+		$adj_pdate = $pdate;
+	}
+	debug_print("after sunset correction, adj_pdate = $adj_pdate...");
+
+	switch ($archiveFormat) {
+		/* For archives, we need to calculate the start and end dates */
+	case "":
+		$month = date('m',$adj_pdate);
+		$day = date('j',$adj_pdate);
+		$year = date('Y',$adj_pdate);
+		$endDay = 0;
+		$endMonth = 0;
+		break;
+	case "month":
+		$day = 1;
+		$month = date('m',$adj_pdate);
+		$year = date('Y',$adj_pdate);
+		$endDay = cal_days_in_month(CAL_GREGORIAN, $month, $year); 
+		$endMonth = $month;
+		break;
+	case "year":
+		$day = 1;
+		$month = 1;
+		$year = date('Y',$adj_pdate);
+		$endDay = 31;
+		$endMonth = 12;
+		break;
+	}
+
+	debug_print("About to convert $year-$month-$day (and $year-$endMonth-$endDay archive-style)...");
+	list ($hebrewMonth, $hebrewDay, $hebrewYear) = split ('/', jdtojewish(gregoriantojd($month, $day, $year)));
+	list ($endHebrewMonth, $endHebrewDay, $endHebrewYear) = split ('/', jdtojewish(gregoriantojd($endMonth, $endDay, $year)));
+
+	switch ($archiveFormat) {
+	case "":
+		break;
+	case "month":
+		/* The day is meaningless for an archive */
+		$hebrewDay = "";
+		break;
+	case "year":
+		/* Yearly archives do not include the months */
+		$hebrewDay = "";
+		$hebrewMonth = "";
+		$endHebrewMonth = "";
+		break;
+	}
+
+	$convertedDate = GetHebrewDateStringFromHebrewDate($spelling, $hebrewYear, $hebrewMonth, $hebrewDay, $endHebrewYear, $endHebrewMonth);
+
+	return $convertedDate;
+}
+/* This function converts Hebrew numeric dates (13/1/5770) to Hebrew strings. It also creates the archive strings if given an endYear and endMonth */
+function GetHebrewDateStringFromHebrewDate($spelling, $year, $month="", $day="", $endYear="", $endMonth="") {
+
+	/* Are we going to be returning Latin letters or Hebrew ones? */
+	$charset = get_option('hebrewdate_latin_display') ? LATIN_CHARSET : HEBREW_CHARSET;
+
+	/* Defensive code */
+	if ($spelling == SEFARDIC_SPELLING || $spelling == ASHKENAZIC_SPELLING) {
 		$charset = LATIN_CHARSET;
 	}
+
+	/* Prepare the fields for the Hebrew date string */
 	if ($day) {
 		if ($charset == HEBREW_CHARSET) {
-			$hebrewDay = getHebrewDay($day);
+			$hebrewDayString = getHebrewDayString($day);
 		} else {
-			$hebrewDay = $day;
+			$hebrewDayString = $day;
 		}
 	}
-	$hebrewMonth = getHebrewMonth($spelling, $month, $year);
-	if (empty($day) && !empty($altMonth) && ($altMonth != $month)) {
-		$altHebrewMonth = getHebrewMonth($spelling, $altMonth, $altYear);
+
+	$hebrewMonthString = getHebrewMonthString($spelling, $month, $year);
+	if (!empty($endMonth) && ($endMonth != $month)) {
+		$endHebrewMonthString = getHebrewMonthString($spelling, $endMonth, $endYear);
 	}
+
 	if ($charset == HEBREW_CHARSET) {
-		$hebrewYear = getHebrewYear($year);
+		$hebrewYearString = getHebrewYearString($year);
 	} else {
-		$hebrewYear = $year;
+		$hebrewYearString = $year;
 	}
-	if (empty($month))
-		$altYear = $year + 1; // Fall through in the next case
-	if (!empty($altYear) && $altYear != $year) {
+
+	if (!empty($endYear) && $endYear != $year) {
 		if ($charset == HEBREW_CHARSET) {
-			$altHebrewYear = getHebrewYear($altYear);
+			$endHebrewYearString = getHebrewYearString($endYear);
 		} else {
-			$altHebrewYear = $altYear;
+			$endHebrewYearString = $endYear;
 		}
 	}
-/*
-	print "Results for D:$day M:$month AM:$altMonth Y:$year AY:$altYear are:";
-	print "D:$hebrewDay M:$hebrewMonth AM:$altHebrewMonth Y:$hebrewYear AY:$altHebrewYear";
-*/
+
+
+	debug_print("Results for D:$day M:$month EM:$endMonth Y:$year EY:$endYear are:");
+	debug_print("D:$hebrewDayString M:$hebrewMonthString EM:$endHebrewMonthString Y:$hebrewYearString EY:$endHebrewYearString...");
+
+
+	/* Begin building the actual string */
 	if ($charset != HEBREW_CHARSET && $spelling == HEBREW_SPELLING) {
 		$convertedDate = "<span dir=\"rtl\">";
 	}
-	if ($hebrewDay)
-		$convertedDate .= $hebrewDay;
-	if ($hebrewMonth)
-		$convertedDate .= " $hebrewMonth";
-	if (!empty($altHebrewMonth) && empty($altHebrewYear))
-		$convertedDate .= " / $altHebrewMonth";
-	if ($hebrewYear)
-		$convertedDate .= " $hebrewYear";
-	if (!empty($altHebrewMonth) && !empty($altHebrewYear))
-		$convertedDate .= " / $altHebrewMonth $altHebrewYear"; 
+	if ($hebrewDayString) {
+		$convertedDate .= $hebrewDayString;
+	}
+	if ($hebrewMonthString) {
+		$convertedDate .= " $hebrewMonthString";
+	}
+	if (!empty($endHebrewMonthString) && empty($endHebrewYearString)) {
+		$convertedDate .= " / $endHebrewMonthString";
+	}
+	if ($hebrewYearString) {
+		$convertedDate .= " $hebrewYearString";
+	}
+	if (!empty($endHebrewMonthString) && !empty($endHebrewYearString)) {
+		$convertedDate .= " / $endHebrewMonthString $endHebrewYearString"; 
+	}
+	if (empty($endHebrewMonthString) && !empty($endHebrewYearString)) {
+		$convertedDate .= " / $endHebrewYearString"; 
+	}
 	if ($charset != HEBREW_CHARSET && $spelling == HEBREW_SPELLING) {
 		$convertedDate .= "</span>";
 	}
 	return $convertedDate;
 }
-function getHebrewDay($day) {
+
+/*********************
+ * Utility Functions *
+ *********************/
+
+function dateFormatToStrftime($dateFormat) {
+   
+    $caracs = array(
+        // Day - no strf eq : S
+        'd' => '%d', 'D' => '%a', 'j' => '%e', 'l' => '%A', 'N' => '%u', 'w' => '%w', 'z' => '%j',
+        // Week - no date eq : %U, %W
+        'W' => '%V', 
+        // Month - no strf eq : n, t
+        'F' => '%B', 'm' => '%m', 'M' => '%b',
+        // Year - no strf eq : L; no date eq : %C, %g
+        'o' => '%G', 'Y' => '%Y', 'y' => '%y',
+        // Time - no strf eq : B, G, u; no date eq : %r, %R, %T, %X
+        'a' => '%P', 'A' => '%p', 'g' => '%l', 'h' => '%I', 'H' => '%H', 'i' => '%M', 's' => '%S',
+        // Timezone - no strf eq : e, I, P, Z
+        'O' => '%z', 'T' => '%Z',
+        // Full Date / Time - no strf eq : c, r; no date eq : %c, %D, %F, %x 
+        'U' => '%s'
+    );
+   
+    return strtr((string)$dateFormat, $caracs);
+} 
+function debug_print() {
+	$debug = true;
+	$debug = false;
+	if (isset($debug) && $debug) {
+		$data = func_get_args();
+		$string = array_shift($data);
+		if (is_array(func_get_arg(1))) {
+			$data = func_get_arg(1);
+		}
+		return vprintf($string,$data);
+	}
+}
+
+function calcSunset($latitude, $longitude, $zenith, $yday, $offset) {
+	/* I don't rememeber where I found this. Sorry. */
+	$A = 1.5708;
+	$B = 3.14159;
+	$C = 4.71239;
+	$D = 6.28319;
+	$E = 0.0174533 * $latitude;
+	$F = 0.0174533 * $longitude;
+	$R = -M_PI/180*($zenith-90);
+
+	$J = $C;
+	$K = $yday + (($J - $F) / $D);
+	$L = ($K * .017202) - .0574039; # Solar Mean Anomoly
+	$M = $L + .0334405 * sin($L); # Solar True Longitude
+	$M += 4.93289 + (3.49066E-04) * sin(2 * $L);
+	while ($M < 0) {
+		$M = ($M + $D);
+	}
+	while ($M >= $D) {
+		$M = ($M - $D);
+	}
+	if (($M / $A) - intval($M / $A) == 0) {
+		$M += 4.84814E-06;
+	}
+	$P = sin($M) / cos($M); 
+	$P = atan2(.91746 * $P, 1);
+	if ($M > $C) {
+		$P += $D;
+	} else{
+		if ($M > $A) {
+			$P += $B;
+		}
+	}
+
+	$Q = .39782 * sin($M);
+	$Q = $Q / sqrt(-$Q * $Q + 1); 
+	$Q = atan2($Q, 1);
+	$S = $R - (sin($Q) * sin($E));
+	$S = $S / (cos($Q) * cos($E));
+
+	$S = $S / sqrt(-$S * $S + 1);
+	$S = $A - atan2($S, 1);
+	$T = $S + $P - 0.0172028 * $K - 1.73364; 
+	$U = $T - $F; 
+	while ($U < 0) {
+		$U = ($U + $D);
+	}
+	while ($U >= $D) {
+		$U = ($U - $D);
+	}
+
+	$U = $U * 3.81972;
+	$hour = intval($U);
+	$min = intval(60*($U-$hour));
+	$hour += $offset;
+	return $hour * 60 + $min;
+}
+
+function isHebrewLeapYear($year) {
+	/* Hebrew leap years are on a 19 year cycle: years 0, 3, 6, 8, 11, 14 and 17 have an extra month */
+	switch ($year % 19) {
+	case 0:
+	case 3:
+	case 6:
+	case 8:
+	case 11:
+	case 14:
+	case 17:
+		return true;
+	default:
+		return false;
+	}
+}
+/* Return the hebrew letters string for a day (0-30) */
+function getHebrewDayString($day) {
 	$jTens = array("", "&#1497;", "&#1499;", "&#1500;", "&#1502;",
 		"&#1504;", "&#1505;", "&#1506;", "&#1508;", "&#1510;");
 	$jTenEnds = array("", "&#1497;", "&#1498;", "&#1500;", "&#1501;",
-		   "&#1503;", "&#1505;", "&#1506;", "&#1507;", "&#1509;");
+		"&#1503;", "&#1505;", "&#1506;", "&#1507;", "&#1509;");
 	$tavTaz = array("&#1496;&quot;&#1493;", "&#1496;&quot;&#1494;");
 	$jOnes = array("", "&#1488;", "&#1489;", "&#1490;", "&#1491;",
 		"&#1492;", "&#1493;", "&#1494;", "&#1495;", "&#1496;");
@@ -289,7 +517,7 @@ function getHebrewDay($day) {
 	}
 	return $sb;
 }
-function getHebrewMonth($spelling, $month, $year) {
+function getHebrewMonthString($spelling, $month, $year) {
 
 	$display_full = get_option('hebrewdate_display_full') ? SHOW_FULL_MONTH : SHOW_SHORT_MONTH;
 	if($spelling == SEFARDIC_SPELLING) {
@@ -317,7 +545,7 @@ function getHebrewMonth($spelling, $month, $year) {
 
 }
 
-function getHebrewYear($year) {
+function getHebrewYearString($year) {
 	$display_thousands = get_option('hebrewdate_display_thousands');
 	$jAlafim = "&#1488;&#1500;&#1508;&#1497;&#1501;"; //word ALAFIM in Hebrew for display on years evenly divisable by 1000
 	$jHundreds = array("", "&#1511;","&#1512;","&#1513;","&#1514;",	"&#1514;&#1511;","&#1514;&#1512;","&#1514;&#1513;", "&#1514;&#1514;", "&#1514;&#1514;&#1511;");
@@ -384,116 +612,54 @@ function isSingleDigitHebrewYear($year) {
 	}
 }
 
-function calcSunset($latitude, $longitude, $zenith, $yday, $offset) {
-	$A = 1.5708;
-	$B = 3.14159;
-	$C = 4.71239;
-	$D = 6.28319;
-	$E = 0.0174533 * $latitude;
-	$F = 0.0174533 * $longitude;
-	$R = -M_PI/180*($zenith-90);
-
-	$J = $C;
-	$K = $yday + (($J - $F) / $D);
-	$L = ($K * .017202) - .0574039; # Solar Mean Anomoly
-	$M = $L + .0334405 * sin($L); # Solar True Longitude
-	$M += 4.93289 + (3.49066E-04) * sin(2 * $L);
-	while ($M < 0) {
-		$M = ($M + $D);
-	}
-	while ($M >= $D) {
-		$M = ($M - $D);
-	}
-	if (($M / $A) - intval($M / $A) == 0) {
-		$M += 4.84814E-06;
-	}
-	$P = sin($M) / cos($M); 
-	$P = atan2(.91746 * $P, 1);
-	if ($M > $C) {
-		$P += $D;
-	} else{
-		if ($M > $A) {
-			$P += $B;
-		}
-	}
-
-	$Q = .39782 * sin($M);
-	$Q = $Q / sqrt(-$Q * $Q + 1); 
-	$Q = atan2($Q, 1);
-	$S = $R - (sin($Q) * sin($E));
-	$S = $S / (cos($Q) * cos($E));
-	
-	$S = $S / sqrt(-$S * $S + 1);
-	$S = $A - atan2($S, 1);
-	$T = $S + $P - 0.0172028 * $K - 1.73364; 
-	$U = $T - $F; 
-	while ($U < 0) {
-		$U = ($U + $D);
-	}
-	while ($U >= $D) {
-		$U = ($U - $D);
-	}
-
-	$U = $U * 3.81972;
-	$hour = intval($U);
-	$min = intval(60*($U-$hour));
-	$hour += $offset;
-	return $hour * 60 + $min;
-}
-
-function isHebrewLeapYear($year) {
-	if($year%19 == 0 || $year%19 == 3 || $year%19 ==6 || $year%19 == 8
-	 ||$year%19 == 11|| $year%19 == 14|| $year%19 == 17) {
-		return true;
-	} else {
-		return false;
-	}
-}
+/*****************
+ * Control Panel *
+ *****************/
 
 function hebrewDateMenu() {
-    if (function_exists('add_options_page')) {
-	add_options_page('Configure Hebrew Date Display', 'Hebrew Date', 6, basename(__FILE__), 'hebrewdate_subpanel');
-    }
- }
+	if (function_exists('add_options_page')) {
+		add_options_page('Configure Hebrew Date Display', 'Hebrew Date', 6, basename(__FILE__), 'hebrewdate_subpanel');
+	}
+}
 
 function hebrewdate_subpanel() {
-    $updated = false;
-    if (isset($_POST['update'])) {
-	$latin_display = $_POST['latin_display'];
-	$spelling = $_POST['spelling'];
-	$display_thousands = $_POST['display_thousands'];
-	$display_full = $_POST['display_full'];
-	$date_order = $_POST['date_order'];
-	$correct_sunset = $_POST['correct_sunset'];
-	$latitude = $_POST['latitude'];
-	$longitude = $_POST['longitude'];
-	update_option('hebrewdate_latin_display', $latin_display);
-	update_option('hebrewdate_spelling', $spelling);
-	update_option('hebrewdate_display_thousands', $display_thousands);
-	update_option('hebrewdate_display_full', $display_full);
-	update_option('hebrewdate_date_order', $date_order);
-	update_option('hebrewdate_correct_sunset', $correct_sunset);
-	update_option('hebrewdate_latitude', $latitude);
-	update_option('hebrewdate_longitude', $longitude);
-	$updated = true;
-	?><div id="message" class="updated fade"><p>
+	$updated = false;
+	if (isset($_POST['update'])) {
+		$latin_display = $_POST['latin_display'];
+		$spelling = $_POST['spelling'];
+		$display_thousands = $_POST['display_thousands'];
+		$display_full = $_POST['display_full'];
+		$date_order = $_POST['date_order'];
+		$correct_sunset = $_POST['correct_sunset'];
+		$latitude = $_POST['latitude'];
+		$longitude = $_POST['longitude'];
+		update_option('hebrewdate_latin_display', $latin_display);
+		update_option('hebrewdate_spelling', $spelling);
+		update_option('hebrewdate_display_thousands', $display_thousands);
+		update_option('hebrewdate_display_full', $display_full);
+		update_option('hebrewdate_date_order', $date_order);
+		update_option('hebrewdate_correct_sunset', $correct_sunset);
+		update_option('hebrewdate_latitude', $latitude);
+		update_option('hebrewdate_longitude', $longitude);
+		$updated = true;
+?><div id="message" class="updated fade"><p>
 	<?php _e('Configuration Updated.')?>
 	</p></div><?php
-    }
-    $latin_display = get_option('hebrewdate_latin_display');
-    $spelling = get_option('hebrewdate_spelling');
-    $display_thousands = get_option('hebrewdate_display_thousands');
-    $display_full = get_option('hebrewdate_display_full');
-    $date_order = get_option('hebrewdate_date_order');
-    $correct_sunset = get_option('hebrewdate_correct_sunset');
-    $latitude = get_option('hebrewdate_latitude');
-    $longitude = get_option('hebrewdate_longitude');
-    ?>
+	}
+	$latin_display = get_option('hebrewdate_latin_display');
+	$spelling = get_option('hebrewdate_spelling');
+	$display_thousands = get_option('hebrewdate_display_thousands');
+	$display_full = get_option('hebrewdate_display_full');
+	$date_order = get_option('hebrewdate_date_order');
+	$correct_sunset = get_option('hebrewdate_correct_sunset');
+	$latitude = get_option('hebrewdate_latitude');
+	$longitude = get_option('hebrewdate_longitude');
+?>
 
 <div class=wrap>
   <form method="post">
-    <h2>Hebrew Date Options</h2>
-     <fieldset class="options">
+	<h2>Hebrew Date Options</h2>
+	 <fieldset class="options">
 	<legend>Display Style</legend>
 	<p>
 	<input type="radio" name="date_order" value=" <?php echo SHOW_HEBREW ?>"
@@ -511,8 +677,8 @@ function hebrewdate_subpanel() {
 	id="show_gregorian_then_hebrew" />
 	<label for="show_gregorian_then_hebrew">Show Gregorian date - Hebrew date</label>
 	</p>
-     </fieldset>
-     <fieldset class="options">
+	 </fieldset>
+	 <fieldset class="options">
 	<legend>Character Set</legend>
 	<p>
 	<input type="radio" name="spelling" value="<?php echo HEBREW_SPELLING ?>"
@@ -542,8 +708,8 @@ function hebrewdate_subpanel() {
 	name="display_thousands" id="display_thousands" />
 	<label for="display_thousands">Display Thousands in the Hebrew Year (Hebrew numbered dates only)</label>
 	</p>
-     </fieldset>
-     <fieldset class="options">
+	 </fieldset>
+	 <fieldset class="options">
 	<legend>Sunset Calculation</legend>
 	<p><input type="checkbox" <?php if ($correct_sunset) echo "checked=\"checked\"" ?>
 	name="correct_sunset" id="correct_sunset" />
@@ -556,7 +722,7 @@ assume that nighttime is still the previous Hebrew day)</label></p>
 	<label for="longitude">Longitude (E):</label>
 	<input type="text" <?php if ($longitude) echo "value=\"$longitude\"" ?> 
 	name="longitude" size="10" id="longitude" /></p>
-     </fieldset>
+	 </fieldset>
   <div class="submit">
   <input type="submit" name="update" value="Update" />
   </div>
@@ -578,50 +744,52 @@ Date</strong>).</p>
 <p>Alternatively, <code>$dateFormat</code> can be set to the special 
 value of <code>"date_format"</code>, in which case it will use the default wordpress 
 formatting.</p>
-<p>Finally, <code>$dateFormat</code> can be set to the special value of 
-<code>"default"</code>. In this case, the <code>$location</code> 
-parameter is ignored, and the function produces the same value that 
-<code>the_time()</code> produces within The Loop.</p>
 
- </div><?php
+</div><?php
 }
 
+/*****************
+ * API Functions *
+ *****************/
 function hebrewDateCurrent($dateFormat="",$where=false) {
 	/* Calculate the current timestamp: currentTime converted to GMT converted to Wordpress offset */
-	$display = date('U') - date('Z') + 60*60*get_option('gmt_offset');
-	if ($dateFormat == "date_format") 
+	//	$now = date('U') - date('Z') + 60*60*get_option('gmt_offset');
+
+	/* Special cases for $dateFormat */
+	if ($dateFormat == "date_format") {
 		$dateFormat=get_option("date_format");
-	if ($dateFormat == "default") {
-		echo jewishDate(date("F j, Y",$display),date("G",$display),date("i",$display),date("z",$display));	
 	}
-	else if ($where == "before" && $dateFormat != "")
-		echo jewishDateCalculate($display) . "-" . date($dateFormat);
-	else if ($where =="after" && $dateFormat != "")
-		echo date($dateFormat) . "-" . jewishDateCalculate($display);
-	else 
-		echo jewishDateCalculate($display);
 
+	$hebrewDateString = GetHebrewDateString(date('U'), "U", null);
+
+	if ($where == "before" && $dateFormat != "") {
+		echo $hebrewDateString . " - " . date($dateFormat);
+	} else if ($where == "after" && $dateFormat != "") {
+		echo date($dateFormat) . " - " . $hebrewDateString;
+	} else  {
+		echo $hebrewDateString;
+	}
 }
-/*
-function hebrewDateHoliday($year="",$month="",$day="",$hour="",$min="")
-{
-if (!$year || !$month || !$day)
 
-		$month = date('m',$adj_pdate);
-		$day = date('j',$adj_pdate);
-		$year = date('Y',$adj_pdate);
-
-				$hour = date('G',$content);
-				$min =  date('i',$content);
-
-
+/* Ideally, a theme should use these two functions, instead of us intercepting the_* and get_the_* */
+function get_the_hebrew_date() {
+	$hebrewDateString = GetHebrewDateString(the_date("U"), "U", null);
+	return $hebrewDateString;
 }
-*/
 
+function the_hebrew_date() {
+	echo get_the_hebrew_date();
+}
+
+/*************************
+ * Plugin Initialization *
+ *************************/
 add_action('admin_menu','hebrewDateMenu');
-add_filter('the_time','jewishDate');
-add_filter('the_date','jewishDate');
-add_filter('get_the_time','jewishDate');
-add_filter('get_the_date','jewishDate');
-add_filter('get_comment_date','jewishDate');
+add_filter('the_time','AddHebrewDateWrap_the_time', 10, 2);
+add_filter('the_date','AddHebrewDateWrap_the_date', 10, 2);
+add_filter('get_the_time','AddHebrewDateWrap_get_the_time', 10, 2);
+add_filter('get_the_date','AddHebrewDateWrap_get_the_date', 10, 2);
+add_filter('get_comment_date','AddHebrewDateWrap_get_comment_date', 10, 2);
+add_filter('get_comment_time','AddHebrewDateWrap_get_comment_time', 10, 2);
+
 ?>
