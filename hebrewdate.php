@@ -3,7 +3,7 @@
 Plugin Name: Hebrew Date
 Plugin URI: http://mikeage.net/content/software/hebrew-dates-in-wordpress/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 2.0.1
+Version: 2.0.2
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
  */
@@ -43,6 +43,8 @@ $hebrewMonths = array(	"&#1514;&#1513;&#1512;&#1497;",   /* Tishrei */
 "&#1502;&#1512;&#1495;&#1513;&#1493;&#1503;", /* Mar Cheshvan */
 "&#1502;&#1504;&#1495;&#1501; &#1488;&#1489;", /* Menachem Av */
 ); 
+define('GERSH',"&#1523;");
+define('GERSHAYIM', "&#1524;");
 
 /* Defines. Note that these are constants, not configuration options */
 define('LATIN_CHARSET', 0);
@@ -500,18 +502,18 @@ function getHebrewDayString($day, $useQuotes) {
 	if($day < 10) { //single digit days get single quote appended
 		$sb .= $jOnes[$day];
 		if ($useQuotes) {
-			$sb .= "'";
+			$sb .= GERSH;
 		}
 	} else if($day == 15) { //special case 15
 		$sb .= $jOnes[9];
 		if ($useQuotes) {
-			$sb .= "&quot;";
+			$sb .= GERSHAYIM;
 		}
 		$sb .= $jOnes[6];
 	} else if($day == 16) { //special case 16
 		$sb .= $jOnes[9];
 		if ($useQuotes) {
-			$sb .= "&quot;";
+			$sb .= GERSHAYIM;
 		}
 		$sb .= $jOnes[7];
 	} else {
@@ -519,11 +521,11 @@ function getHebrewDayString($day, $useQuotes) {
 		$sb .= $jTens[$tens];
 		if($day % 10 == 0) { // 10 or 20 single digit append single quote
 			if ($useQuotes) {
-				$sb .= "'";
+				$sb .= GERSH;
 			}
 		} else if($day > 10) { // >10 display " between 10s and 1s
 			if ($useQuotes) {
-				$sb .= "&quot;";
+				$sb .= GERSHAYIM;
 			}
 		}
 		$day = $day % 10; //discard 10s
@@ -576,14 +578,14 @@ function getHebrewYearString($year, $useQuotes) {
 	if($year % 1000 == 0) { // in year is 5000, 4000 etc
 		$sb .= $jOnes[$thousands];
 			if ($useQuotes) {
-				$sb .= "'";
+				$sb .= GERSH;
 			}
 		$sb .= "&#160;";
 		$sb .= $jAlafim; //add # of thousands plus word thousand (overide alafim boolean)
 	} else if($display_thousands) { // if alafim boolean display thousands
 		$sb .= $jOnes[$thousands];
 			if ($useQuotes) {
-				$sb .= "'";
+				$sb .= GERSH;
 			}
 		$sb .= "&#160;";
 	}
@@ -594,13 +596,13 @@ function getHebrewYearString($year, $useQuotes) {
 	if($year == 15) { //special case 15
 		$sb .= $jOnes[9];
 		if ($useQuotes) {
-			$sb .= "&quot;";
+			$sb .= GERSHAYIM;
 		}
 		$sb .= $jOnes[6];
 	} else if($year == 16) { //special case 16
 		$sb .= $jOnes[9];
 		if ($useQuotes) {
-			$sb .= "&quot;";
+			$sb .= GERSHAYIM;
 		}
 		$sb .= $jOnes[7];
 	} else {
@@ -619,13 +621,12 @@ function getHebrewYearString($year, $useQuotes) {
 	}
 	if($singleDigitYear == true) {
 			if ($useQuotes) {
-				$sb .= "'";
+				$sb .= GERSH;
 			}
 	} else { // append double quote before last digit
 		$pos1 = strrpos($sb, "&");
 			if ($useQuotes) {
-				$sb .= "'";
-					$sb = substr($sb, 0, $pos1) . "&quot;" . substr($sb, $pos1);
+				$sb = substr($sb, 0, $pos1) . GERSHAYIM . substr($sb, $pos1);
 			}
 	}
 

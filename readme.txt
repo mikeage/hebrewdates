@@ -4,7 +4,7 @@ Donate link: http://paypal.com/send/to/paypal@mikeage.net
 Tags: jewish, hebrew, dates, formatting
 Requires at least: 2.0
 Tested up to: 3.0
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 
 This plugin allows WordPress to easily show Hebrew dates instead of (or in addition to) the standard Gregorian dates. No theme changes are required.
 
@@ -40,6 +40,12 @@ Because.
 2. The config screen.
 
 == Changelog ==
+
+= 2.0.2 =
+
+* Remove superflous single quote after the year
+* Switch ' and &quot; to &1523; and &#1524; [proper unicode]. Thanks to KosherJava for the tip 
+
 
 = 2.0.1 = 
 
