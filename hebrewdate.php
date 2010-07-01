@@ -139,9 +139,12 @@ function GetHebrewDateString($content, $format="", $originalRequest=null) {
 	/* Now try and figure out what format $content is based on $format. This is very ugly looking, but it's the best I could come up with. strtotime is simply not reliable enough (even for full times, and certainly not for handling archives) */
 	if (function_exists('date_parse_from_format')) {
 		$new_parse = true;
+		debug_print("New style...");
 		$content_parsed = date_parse_from_format($format, $content);
 	} else {
 		$new_parse = false;
+		debug_print("Old style...");
+		$content = preg_replace("([0-9]st|nd|rd|th)","\\1",$content);
 		$content_parsed = strptime($content, dateFormatToStrftime($format));
 		$content_parsed['hour']=$content_parsed['tm_hour'];
 		$content_parsed['minute']=$content_parsed['tm_min'];
@@ -387,7 +390,7 @@ function dateFormatToStrftime($dateFormat) {
    
     $caracs = array(
         // Day - no strf eq : S
-        'd' => '%d', 'D' => '%a', 'j' => '%e', 'l' => '%A', 'N' => '%u', 'w' => '%w', 'z' => '%j',
+		'd' => '%d', 'D' => '%a', 'j' => '%e', 'l' => '%A', 'N' => '%u', 'w' => '%w', 'z' => '%j', 'S' => '', /* We'll remove the suffix elsewhere */
         // Week - no date eq : %U, %W
         'W' => '%V', 
         // Month - no strf eq : n, t
