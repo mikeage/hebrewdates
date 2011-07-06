@@ -72,8 +72,8 @@ function AddHebrewDateToGregorian($content, $format = "", $originalRequest = nul
 
 	debug_print("Input content was |$content|, formatted as |$format|, from |$originalRequest|...");
 
-	/* Once replaced, a date has <!-- HD --> prepended to it. This allows us to prevent an infinite loop since internally, we call functions to which we've been added as a filter */
-	$doneAlready = strpos($content, "<!-- HD -->");
+	/* Once replaced, a date has &zwj;&zwj; prepended to it. This allows us to prevent an infinite loop since internally, we call functions to which we've been added as a filter */
+	$doneAlready = strpos($content, "&zwj;&zwj;");
 	if(false !== $doneAlready) { return $content;}
 
 	/* Get the converted string */
@@ -94,7 +94,7 @@ function AddHebrewDateToGregorian($content, $format = "", $originalRequest = nul
 		$outputDate = $content . ' - ' . $convertedDate;
 	}
 
-	return "<!-- HD -->" . $outputDate; 
+	return "&zwj;&zwj;" . $outputDate; 
 }
 
 /* This function actually handles the conversion. We have a sepereate function to support the public APIs, which don't need the "already-done" check and don't want to keep the Gregorian date */
