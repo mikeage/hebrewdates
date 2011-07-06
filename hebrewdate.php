@@ -3,7 +3,7 @@
 Plugin Name: Hebrew Date
 Plugin URI: http://mikeage.net/content/software/hebrew-dates-in-wordpress/
 Description: A plugin that provides Hebrew dates in Wordpress. Based on the <a href="http://www.kosherjava.com/wordpress/hebrew-date-plugin/">Hebrew Date</a> plugin by <a href="http://kosherjava.com">KosherJava</a>.
-Version: 2.0.3
+Version: 2.1.0
 Author: Mike "Mikeage" Miller
 Author URI: http://mikeage.net
  */
